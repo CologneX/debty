@@ -58,17 +58,22 @@ struct LendingsView: View {
                                                         .foregroundStyle(.secondary)
                                                 }
                                                 if debt.status == "pending" {
-                                                    Button("Confirm"){
-                                                        Task{
-                                                            do {
-                                                                try await model.confirmLending(id: debt.id)
-                                                                try await model.getLendings()
-                                                            }
-                                                            catch {
-                                                                print(error)
+                                                    HStack{
+                                                        Spacer()
+                                                        Button("Confirm Payment"){
+                                                            Task{
+                                                                do {
+                                                                    try await model.confirmLending(id: debt.id)
+                                                                    try await model.getLendings()
+                                                                }
+                                                                catch {
+                                                                    print(error)
+                                                                }
                                                             }
                                                         }
+                                                        .buttonStyle(.bordered)
                                                     }
+                                                    
                                                 }
                                                 Divider()
                                                 HStack {
@@ -81,6 +86,14 @@ struct LendingsView: View {
                                                         .bold()
                                                 }
                                             }
+                                        }
+                                    }
+                                }
+                                .onDelete { indexSet in
+                                    Task{
+                                        do {
+                                            try await model.deleteLending(id: model.lendings[indexSet.first!].id)
+                                            try await model.getLendings()
                                         }
                                     }
                                 }
@@ -101,20 +114,22 @@ struct LendingsView: View {
             }
             .searchable(text: $model.searchLending)
             .onChange(of: model.searchLending, {
-               refreshLendingData()
+                refreshLendingData()
             })
             .onAppear(perform: {
-               refreshLendingData()
+                refreshLendingData()
             })
             .onChange(of: model.filter, {
                 refreshLendingData()
             })
-            .navigationTitle("Lendings")
+            .navigationTitle("Your Lendings")
             .refreshable{
                 refreshLendingData()
             }
             .sheet(isPresented: $profileSheet, content: {
                 ProfileView(profile: $profile, isLoginScreenPresented: $isLoginScreenPresented)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
             })
             .sheet(isPresented: $addSheetActive, content: {
                 AddLendingSheet(isAuthenticated: $isAuthenticated, model: $model, currUser: $profile)

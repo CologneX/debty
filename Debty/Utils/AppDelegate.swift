@@ -8,15 +8,14 @@ import UIKit
 import UserNotifications
 import Firebase
 import FirebaseMessaging
-class AppDelegateNew: UIResponder, UIApplicationDelegate {
-    
+import AVFoundation
+class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK:  Stored properties
+    let speechSynthesizer = AVSpeechSynthesizer()
     var window: UIWindow?
-    
+    let audioSession = AVAudioSession.sharedInstance()
     private let notificationCenter = UNUserNotificationCenter.current()
-    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
         
         // Register for remote notifications
         registerForPushNotifications()
@@ -31,12 +30,26 @@ class AppDelegateNew: UIResponder, UIApplicationDelegate {
                 UserDefaults.standard.set(token, forKey: "deviceToken")
             }
         }
-        
+        // Configure audio session
+        do {
+            try audioSession.setCategory(.playback, mode: .voicePrompt, options: [])
+            try audioSession.setActive(true)
+        } catch {
+            print("Failed to configure audio session: \(error)")
+        }
         return true
     }
+    
+//    private func configureNearbyInteraction() {
+//            let configuration = NINearbyPeerConfiguration(peerToken: nil)
+//            session = NISession(configuration: configuration)
+//            session?.delegate = self
+//    }
 }
+
+
 // MARK:  Application Lifecycle methods
-extension AppDelegateNew {
+extension AppDelegate {
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
@@ -54,10 +67,20 @@ extension AppDelegateNew {
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         // Saves changes in the application's managed object context before the application terminates.
+        do {
+            try audioSession.setCategory(.playback, mode: .voicePrompt, options: [])
+            try audioSession.setActive(true)
+        } catch {
+            print("Failed to configure audio session: \(error)")
+        }
     }
 }
+// MARK: Audio Session methods
+extension AppDelegate: AVAudioPlayerDelegate {
+}
 // MARK:  Notification methods
-extension AppDelegateNew: UNUserNotificationCenterDelegate {
+extension AppDelegate: UNUserNotificationCenterDelegate {
+    
     /// Requests the user for Push Notification access
     private func registerForPushNotifications() {
         // Setting delegate to listen to events
@@ -73,25 +96,39 @@ extension AppDelegateNew: UNUserNotificationCenterDelegate {
             }
         }
     }
-    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        /// We receive the device token that we requested
-        /// We save the device token to our local storage of choice
-        /// (If needed) We register the device token with our FCM
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken;
     }
+    
     func application(_ application: UIApplication,
                      didFailToRegisterForRemoteNotificationsWithError error: Error) {
         /// Some error occured while registering for device token
     }
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        /// 1. Called when the user taps on a notification and the app is opened
-        /// 2. Responds to the custom actions linked with the notifications (like categories and actions used for notifications)
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        // Text-to-speech functionality should be moved after scheduling notification
+        if let avmessage = userInfo["avmessage"] as? String {
+            let utterance = AVSpeechUtterance(string: avmessage)
+            utterance.pitchMultiplier = 1.0
+            utterance.rate = 0.5
+            utterance.voice = AVSpeechSynthesisVoice(language: "id-ID")
+            // change the
+            speechSynthesizer.speak(utterance)
+        }
+        
+        // Call completion handler after speaking
+        completionHandler(UIBackgroundFetchResult.newData)
+        
     }
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        /// Called when the app is in foreground and the notification arrives
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        print("pas tekan")
+        let userInfo = response.notification.request.content.userInfo
+        Messaging.messaging().appDidReceiveMessage(userInfo)
+        completionHandler()
     }
 }
 
-extension AppDelegateNew: MessagingDelegate {
+extension AppDelegate: MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         if let fcmToken = fcmToken {
             UserDefaults.standard.set(fcmToken, forKey: "deviceToken")

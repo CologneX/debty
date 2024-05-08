@@ -11,7 +11,7 @@ struct DebtyApp: App {
     @State var profile: ProfileViewModel = ProfileViewModel()
     @State var isLoginScreenPresented: Bool = false
     @State var isAuthenticated: Bool? = nil
-    @UIApplicationDelegateAdaptor(AppDelegateNew.self) var appDelegate
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     var body: some Scene {
         WindowGroup {
             Group {
@@ -45,7 +45,5 @@ struct DebtyApp: App {
                 }
             }
         }
-        
     }
 }
-

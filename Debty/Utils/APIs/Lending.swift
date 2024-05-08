@@ -39,9 +39,7 @@ class LendingsAPI {
     }
     static func deleteLending(id: UUID) async throws -> Void {
         do {
-            try await supabase
-                .rpc("delete_debt", params: ["debt_id": id.uuidString])
-                .execute()
+            try await supabase.from("lendings").delete().eq("id", value: id).execute()
         } catch {
             throw error
         }

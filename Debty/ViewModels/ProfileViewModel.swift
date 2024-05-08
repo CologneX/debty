@@ -22,9 +22,7 @@ import Supabase
     }
     func getUsername() async {
         do {
-//            username =
-            var gg = try await supabase.from("devices").select().eq("user_id", value: "c75654ec-04ca-4171-9c14-2cba85c99f0c").execute().value
-            print(gg)
+            username = try await supabase.rpc("get_username").execute().value
         } catch {
             await presentAlert(title: "Failed to fetch Username!", subTitle: error.localizedDescription, primaryAction: .init(title: "Retry", style: .default, handler: {_ in
                 Task {

@@ -68,16 +68,21 @@ struct DebtsView: View {
                                                             .foregroundStyle(.secondary)
                                                     }
                                                     if debt.status == "unpaid" {
-                                                        Button("Confirm"){
-                                                            Task{
-                                                                do {
-                                                                    try await model.completeDebts(id: debt.id)
-                                                                    try await model.getDebts()
-                                                                }
-                                                                catch {
-                                                                    print(error)
+                                                        HStack{
+                                                            Spacer()
+                                                            Button("Mark as Paid"){
+                                                                Task{
+                                                                    do {
+                                                                        try await model.completeDebts(id: debt.id)
+                                                                        try await model.getDebts()
+                                                                    }
+                                                                    catch {
+                                                                        print(error)
+                                                                    }
                                                                 }
                                                             }
+                                                            .padding(1)
+                                                            .buttonStyle(.bordered)
                                                         }
                                                     }
                                                     Divider()
@@ -114,9 +119,11 @@ struct DebtsView: View {
             .onChange(of: model.filter, {
                 refreshDebtDate()
             })
-            .navigationTitle("Debts")
+            .navigationTitle("Your Debts")
             .sheet(isPresented: $profileSheet, content: {
                 ProfileView(profile: $profile, isLoginScreenPresented: $isLoginScreenPresented)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
             })
             .toolbar(content: {
                 ToolbarItem(placement: .topBarLeading) {

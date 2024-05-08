@@ -10,24 +10,46 @@ struct ProfileView: View {
     @Binding var profile: ProfileViewModel
     @Binding var isLoginScreenPresented: Bool
     @State var showLogoutAlert: Bool = false
-    @State var isLoadinUsername: Bool = false
+    @State var isLoadingUsername: Bool = false
+    @State var isAnonymous: Bool = false
     var body: some View {
         if (profile.profile != nil) {
             NavigationStack{
-                GroupBox(label:
-                            Label(profile.username ?? "Loading", systemImage: "person.fill")
-                    .task {
-                        isLoadinUsername = true
-                        await profile.getUsername()
-                        isLoadinUsername = false
+                ZStack {
+                    Color.accentColor
+                    VStack{
+                        if isLoadingUsername && profile.username == nil {
+                            ProgressView()
+                        } else {
+                            Label(profile.username ?? "No Username", systemImage: "person.fill")
+                                .font(.title2)
+                                .bold()
+                        }
+                        Text(profile.profile?.email ?? "No Email")
+                            .frame(maxWidth: .infinity)
                     }
-                         
-                         , content: {
-                    Text(profile.profile?.email ?? "No Profile")
-                    
-                })
-                .padding(.horizontal)
+                    .padding()
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                    .padding([.bottom, .trailing, .leading])
+                }
+                .frame(maxHeight: 150)
+                .background(Color.accentColor)
+                .task {
+                    isLoadingUsername = true
+                    await profile.getUsername()
+                    isLoadingUsername = false
+                }
                 Form{
+                    // Switch for toggling anonymous mode
+                    Section{
+                        Toggle("Anonymous Mode", isOn: $isAnonymous)
+                    }
+                    .alert("Miskin", isPresented: $isAnonymous, actions: {
+                        Button("Ok", role: .cancel){}
+                    }, message: {
+                        Text("It seems that you have not bought the premium version of the app. Please buy the premium version to access this feature.")
+                    })
+                    
                     Button("Log Out", role: .destructive, action: {
                         showLogoutAlert.toggle()
                     })
@@ -44,6 +66,8 @@ struct ProfileView: View {
                     })
                 }
                 .navigationTitle("Profile")
+                .navigationBarTitleDisplayMode(.inline)
+                
             }
         } else {
             ContentUnavailableView {

@@ -9,10 +9,10 @@ import SwiftUI
 struct AvatarView: View {
     var body: some View {
         Image(systemName: "person.circle")
+            .symbolRenderingMode(.hierarchical)
             .resizable()
-            .border(Color.accentColor)
             .frame(width: 28, height: 28)
-            .clipShape(Circle())
+            .foregroundStyle(Color.accentColor)
     }
 }
 #Preview {

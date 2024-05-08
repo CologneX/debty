@@ -7,7 +7,7 @@
 
 import SwiftUI
 import AuthenticationServices
-
+import NearbyInteraction
 struct AuthView: View {
     @State var isLoading: Bool = false
     @State var data: LoginInformation = LoginInformation(email: "", password: "")
@@ -53,6 +53,8 @@ struct AuthView: View {
                             if let deviceToken = UserDefaults.standard.string(forKey: "deviceToken") {
                                 try await Authentication.updateDeviceToken(token: deviceToken)
                             }
+                            // Insert discovery token to database                            
+                            
                         } catch {
                             presentAlert(title: "Failed to Log In", subTitle: error.localizedDescription, primaryAction: .init(title: "Ok", style: .default))
                         }
@@ -91,6 +93,8 @@ struct AuthView: View {
                             if let deviceToken = UserDefaults.standard.string(forKey: "deviceToken") {
                                 try await Authentication.updateDeviceToken(token: deviceToken)
                             }
+
+                            
                         } catch {
                             dump(error)
                         }

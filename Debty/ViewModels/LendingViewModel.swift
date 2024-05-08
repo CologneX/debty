@@ -41,7 +41,14 @@ import Foundation
             await presentAlert(title: "Failed to fetch Contacts!", subTitle: error.localizedDescription, primaryAction: .init(title: "Ok", style: .default))
         }
     }
-    
+    func deleteLending(id: UUID) async throws {
+        do {
+            try await LendingsAPI.deleteLending(id: id)
+        } catch {
+            await presentAlert(title: "Failed to delete Lending!", subTitle: error.localizedDescription, primaryAction: .init(title: "Ok", style: .default))
+            throw error
+        }
+    }
     func addContact(username: String) async throws {
         do {
             try await LendingsAPI.addContact(username: username)

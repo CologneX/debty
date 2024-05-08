@@ -11,28 +11,29 @@ import Supabase
 @Observable class SummaryViewModel {
     var lendingSummary: Double? = nil
     var debtSummary: Double? = nil
-    func getLendingSummary(filterDate: Date?) async throws{
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let filterDateFormatted = filterDate != nil ? formatter.string(from: filterDate!) : nil
+    func getLendingSummary(filter_date: DateFilter) async throws{
         do {
-            lendingSummary = try await supabase.rpc("get_total_lending", params: ["filter_date": filterDateFormatted])
-                .execute()
-                .value
+            lendingSummary = try await supabase.rpc("get_total_lending", params: [
+                "start_date":filter_date.start,
+                "end_date":filter_date.end
+                
+            ])
+            .execute()
+            .value
         }
         catch {
             await presentAlert(title: "Error fetching lendings!", subTitle: error.localizedDescription, primaryAction: .init(title: "Ok", style: .default))
         }
     }
     
-    func getBorrowingSummary(filterDate: Date?) async throws {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let filterDateFormatted = filterDate != nil ? formatter.string(from: filterDate!) : nil
+    func getBorrowingSummary(filter_date: DateFilter) async throws {
         do {
-            debtSummary = try await supabase.rpc("get_total_borrowing", params: ["filter_date": filterDateFormatted])
-                .execute()
-                .value
+            debtSummary = try await supabase.rpc("get_total_borrowing", params: [
+                "start_date":filter_date.start,
+                "end_date":filter_date.end
+            ])
+            .execute()
+            .value
         }
         catch {
             await presentAlert(title: "Error fetching borrowings!", subTitle: error.localizedDescription, primaryAction: .init(title: "Ok", style: .default))
